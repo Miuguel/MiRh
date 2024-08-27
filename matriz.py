@@ -1,70 +1,52 @@
+from PIL import Image
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+import os
 
-def funcao_calor_matrix(matrix, num_iterations, variacao):
+def extrair_canais_rgb(caminho_imagem):
     """
-    Função para atualizar a matriz
-    matrix: matriz inicial (numpy array)
-    num_iterations: número de iterações
-    variacao: delta x (pequeno fator de variação)
+    Função que carrega uma imagem e retorna matrizes separadas para os canais de cor Red, Green e Blue.
+
+    :param caminho_imagem: O caminho para a imagem a ser carregada.
+    :return: Três matrizes NumPy correspondentes aos canais R, G e B.
     """
-    rows, cols = matrix.shape  # Tamanho da matriz
+    # Carregar a imagem
+    imagem = Image.open(caminho_imagem)
+    
+    # Converter a imagem para RGB caso não esteja nesse modo
+    imagem_rgb = imagem.convert('RGB')
+    
+    # Converter a imagem para um array NumPy
+    imagem_array = np.array(imagem_rgb)
+    
+    # Extrair os canais R, G, B
+    matriz_r = imagem_array[:, :, 0]  # Canal Red
+    matriz_g = imagem_array[:, :, 1]  # Canal Green
+    matriz_b = imagem_array[:, :, 2]  # Canal Blue
 
-    for _ in range(num_iterations):
-        new_matrix = matrix.copy()  # Cópia da matriz original para atualizar valores
-
-        for i in range(rows):
-            for j in range(cols):
-                # Calcular a soma dos vizinhos adjacentes
-                sum_neighbors = 0
-                num_neighbors = 0
-
-                if i > 0:
-                    sum_neighbors += matrix[i-1, j]  # Célula acima
-                    num_neighbors += 1
-
-                if i < rows - 1:
-                    sum_neighbors += matrix[i+1, j]  # Célula abaixo
-                    num_neighbors += 1
-
-                if j > 0:
-                    sum_neighbors += matrix[i, j-1]  # Célula à esquerda
-                    num_neighbors += 1
-
-                if j < cols - 1:
-                    sum_neighbors += matrix[i, j+1]  # Célula à direita
-                    num_neighbors += 1
-
-                # Atualizar a célula atual baseada na média dos vizinhos
-                if num_neighbors > 0:
-                    new_matrix[i, j] = matrix[i, j] + variacao * (sum_neighbors / num_neighbors - matrix[i, j])
-
-        matrix = new_matrix  # Atualizar a matriz original com a nova matriz
-
-    return matrix  # Retornar a matriz atualizada
-
+    return matriz_r, matriz_g, matriz_b
 def funcao_calor_otim_matrix(matrix, num_iterations, variacao):
     # Função para atualizar a matriz
     rows, cols = matrix.shape  # Tamanho da matriz
 
     for _ in range(num_iterations):
-        # Criar matrizes deslocadas
-        matrix_up = np.vstack([matrix[1:, :], np.zeros((1, cols))])
-        matrix_down = np.vstack([np.zeros((1, cols)), matrix[:-1, :]])
-        matrix_left = np.hstack([matrix[:, 1:], np.zeros((rows, 1))])
-        matrix_right = np.hstack([np.zeros((rows, 1)), matrix[:, :-1]])
+        # Criar matrizes deslocadas com NaN em vez de zeros
+        matrix_up = np.vstack([matrix[1:, :], np.full((1, cols), np.nan)])
+        matrix_down = np.vstack([np.full((1, cols), np.nan), matrix[:-1, :]])
+        matrix_left = np.hstack([matrix[:, 1:], np.full((rows, 1), np.nan)])
+        matrix_right = np.hstack([np.full((rows, 1), np.nan), matrix[:, :-1]])
 
-        # Soma das matrizes deslocadas
-        sum_neighbors = matrix_up + matrix_down + matrix_left + matrix_right
+        # Soma das matrizes deslocadas, ignorando NaNs
+        sum_neighbors = np.nansum(np.stack([matrix_up, matrix_down, matrix_left, matrix_right], axis=0), axis=0)
 
-        # Número de vizinhos válidos
-        num_neighbors = (matrix_up != 0) + (matrix_down != 0) + (matrix_left != 0) + (matrix_right != 0)
+        # Número de vizinhos válidos (não NaNs)
+        num_neighbors = np.sum(~np.isnan(np.stack([matrix_up, matrix_down, matrix_left, matrix_right], axis=0)), axis=0)
 
-        # Evitar divisão por zero
-        num_neighbors[num_neighbors == 0] = 1
+        # Evitar divisão por zero, mas agora com NaNs não é necessário porque o np.nansum irá ignorá-los
+        # num_neighbors[num_neighbors == 0] = 1
 
-        # Calcular a nova matriz com a fórmula fornecida
+        # Calcular a nova matriz com a fórmula fornecida, agora ignorando NaNs corretamente
         new_matrix = matrix + variacao * (sum_neighbors / num_neighbors - matrix)
 
         # Atualizar a matriz original com a nova matriz
@@ -72,52 +54,66 @@ def funcao_calor_otim_matrix(matrix, num_iterations, variacao):
 
     return matrix  # Retornar a matriz atualizada
 
-# Exemplo de uso:
-x, y = np.meshgrid(np.arange(-1000, 1000, 1), np.arange(-1000, 1000, 1))
-initial_matrix = np.cos(x) + np.cos(y)
-updated_matrix = initial_matrix
-result = initial_matrix
+# Nome do arquivo de imagem
+nome_arquivo = 'grid_0.png'
+diretorio_atual = os.path.dirname(os.path.abspath(__file__))
+# Combinar o diretório atual com o nome do arquivo
+caminho_imagem = os.path.join(diretorio_atual, nome_arquivo)
+# Abrir a imagem
+imagem = Image.open(caminho_imagem).convert('RGB')
+imagem_array = np.array(imagem)
+R = imagem_array[:, :, 0].astype(float) / 255
+G = imagem_array[:, :, 1].astype(float) / 255
+B = imagem_array[:, :, 2].astype(float) / 255
 
-num_iterations = 5
-variacao = 0.1  # Valor pequeno para a variação, menor que 1
+#print("Matriz do canal Red (R):\n", R)
+#print("Matriz do canal Green (G):\n", G)
+#print("Matriz do canal Blue (B):\n", B)
+
+"""
+plt.imshow(R, cmap='hot', interpolation='nearest')
+plt.colorbar()
+plt.title("Vermelho")
+plt.show()
+"""
 
 # Iniciar o cronômetro
 start_time = time.time()
 
-# Parar o cronômetro e exibir o tempo decorrido
-updated_matrix = funcao_calor_matrix(updated_matrix, num_iterations, variacao)
+num_iterations_r = 0
+num_iterations_g = 5
+num_iterations_b = 0
+
+variacao = 0.9  # Valor pequeno para a variação, menor que 1
+matriz_r = funcao_calor_otim_matrix(R, num_iterations_r, variacao)
+matriz_g = funcao_calor_otim_matrix(G, num_iterations_g, variacao)
+matriz_b = funcao_calor_otim_matrix(B, num_iterations_b, variacao)
 elapsed_time = time.time() - start_time
 print(f'Elapsed time: {elapsed_time:.4f} seconds')
-#Elapsed time: not optmized
 
-plt.imshow(updated_matrix, cmap='hot', interpolation='nearest')
+"""
+plt.imshow(matriz_r, cmap='hot', interpolation='nearest')
 plt.colorbar()
-plt.title("Matriz iteração")
+plt.title("Matriz iteração vermelho")
+plt.show()
+"""
+
+# Recriar a imagem combinando as camadas R, G, B
+imagem_recuperada = np.stack((matriz_r, matriz_g, matriz_b), axis=-1)
+
+# Mostrar a imagem recuperada para comparação
+plt.subplot(1, 2, 2)
+plt.imshow(imagem_recuperada)
+plt.title('Imagem Recuperada')
+
+# Caminho para salvar a imagem recuperada
+caminho_salvar_imagem = os.path.join(diretorio_atual, 'imagem_verde.png')
+
+# Salvar a imagem recuperada
+plt.imsave(caminho_salvar_imagem, imagem_recuperada)
+
 plt.show()
 
-# Iniciar o cronômetro
-start_time = time.time()
-
-# Executar a função
-result = funcao_calor_otim_matrix(result, num_iterations, variacao)
-
-# Parar o cronômetro e exibir o tempo decorrido
-elapsed_time = time.time() - start_time
-print(f'Elapsed time: {elapsed_time:.4f} seconds')
-#Elapsed time: 40 times faster
-
-plt.imshow(result, cmap='hot', interpolation='nearest')
-plt.colorbar()
-plt.title("Matriz metodo otimizado")
-plt.show()
-
-# Usando uma visualização de calor com matplotlib
-if np.allclose(updated_matrix, result, rtol=1e-05, atol=1e-08):
-    print("As matrizes são iguais (dentro da tolerância).")
-else:
-    print("As matrizes são diferentes.")
-
-plt.imshow(updated_matrix - result, cmap='hot', interpolation='nearest')
-plt.colorbar()
-plt.title("Diferença entre as matrizes")
-plt.show()
+# TODO: Adicionar Condição de Estabilidade, delta x e delta t, fazer o algoritmo do metodo implicito
+# 2) Aprender a teoria da discretização no Apêndice do livro de EDP
+# : Um Curso de Graduação (Valeria Iorio); ali tem Método Explícito ou Implícito vs Híbrido
