@@ -69,7 +69,7 @@ MiRh/
 ![Imagem Original](examples/example_image.png)
 
 ### Resultado:
-![Resultado](heat_simulation_output_red.png)
+![Resultado](imagem_vermelho.png)
 
 ## 🧠 Próximos Passos
 
