@@ -66,10 +66,10 @@ MiRh/
 ## 🌟 Exemplos
 
 ### Imagem Original:
-![Imagem Original](examples/example_image.jpg)
+![Imagem Original](examples/example_image.png)
 
 ### Resultado:
-![Resultado](examples/heat_simulation_output.png)
+![Resultado](heat_simulation_output_red.png)
 
 ## 🧠 Próximos Passos
 
