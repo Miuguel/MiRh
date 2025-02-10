@@ -1,47 +1,33 @@
 import numpy as np
-from PIL import Image
 from scipy.sparse import diags
 from scipy.sparse.linalg import spsolve
-import matplotlib.pyplot as plt
-import os
 
-# Configurações físicas e temporais
-alpha = 1.0      # Difusividade térmica
-dt = 0.01        # Intervalo de tempo
-Tf = 1.0         # Tempo total de simulação
-Ly = Lx = 1.0    # Comprimento físico do domínio (ajustável)
 
-# Carregar a imagem e definir nx e ny
-caminho_imagem = 'examples/example_image.png'
-imagem = Image.open(caminho_imagem).convert('L')  # Converter para escala de cinza
-imagem_array = np.array(imagem, dtype=float) / 255  # Normalizar entre 0 e 1
-
-ny, nx = imagem_array.shape  # Dimensões da imagem
-dx = Lx / (nx - 1)
-dy = Ly / (ny - 1)
-sigma_x = alpha * dt / dx**2
-sigma_y = alpha * dt / dy**2
-
-# Verificar estabilidade
-# assert sigma_x + sigma_y <= 0.5, "Condição de estabilidade violada! Reduza dt ou aumente dx/dy."
-
-# Construir a matriz tridiagonal para o método implícito (em x e y)
 def construir_matriz_tridiagonal(n, sigma):
+    """
+    Constrói uma matriz tridiagonal esparsa para o método implícito.
+    
+    :param n: Número de pontos na direção (x ou y).
+    :param sigma: Fator de difusão em uma direção (x ou y).
+    :return: Matriz tridiagonal esparsa no formato CSR.
+    """
     diagonals = [
-        -sigma * np.ones(n - 1),   # Diagonal inferior
+        -sigma * np.ones(n - 1),    # Diagonal inferior
         (1 + 2 * sigma) * np.ones(n),  # Diagonal principal
-        -sigma * np.ones(n - 1)    # Diagonal superior
+        -sigma * np.ones(n - 1)     # Diagonal superior
     ]
     return diags(diagonals, offsets=[-1, 0, 1], format='csr')
 
-A_x = construir_matriz_tridiagonal(nx, sigma_x)  # Matriz A no eixo x
-A_y = construir_matriz_tridiagonal(ny, sigma_y)  # Matriz A no eixo y
 
-# Inicializar o campo de temperatura
-U = imagem_array.copy()
-
-# Função para resolver em uma dimensão (direção alternada)
 def resolver_direcao_alternada(U, A, axis):
+    """
+    Resolve o sistema linear em uma direção (x ou y) usando o método implícito.
+    
+    :param U: Matriz de temperatura atual.
+    :param A: Matriz tridiagonal esparsa correspondente à direção.
+    :param axis: 0 para resolver ao longo de x, 1 para resolver ao longo de y.
+    :return: Matriz U atualizada.
+    """
     if axis == 0:  # Resolver ao longo de x (linhas)
         for j in range(U.shape[1]):
             U[:, j] = spsolve(A, U[:, j])
@@ -50,18 +36,47 @@ def resolver_direcao_alternada(U, A, axis):
             U[i, :] = spsolve(A, U[i, :])
     return U
 
-# Iterações no tempo
-nT = int(Tf / dt)
-for t in range(nT):
-    U = resolver_direcao_alternada(U, A_x, axis=0)  # Passo 1: resolver ao longo de x
-    U = resolver_direcao_alternada(U, A_y, axis=1)  # Passo 2: resolver ao longo de y
 
-# Mostrar e salvar o resultado final
-plt.imshow(U, cmap='hot', extent=[0, Lx, 0, Ly])
-plt.colorbar(label='Temperatura')
-plt.title("Distribuição de Temperatura Final")
-plt.show()
+def metodo_implicito(U_inicial, alpha, dt, Tf, Lx, Ly):
+    """
+    Executa a simulação de calor usando o método implícito.
+    
+    :param U_inicial: Matriz 2D de temperatura inicial (normalizada entre 0 e 1).
+    :param alpha: Difusividade térmica.
+    :param dt: Intervalo de tempo.
+    :param Tf: Tempo total de simulação.
+    :param Lx: Comprimento físico na direção x.
+    :param Ly: Comprimento físico na direção y.
+    :return: Matriz 2D de temperatura final.
+    """
+    # Obter dimensões da matriz inicial
+    ny, nx = U_inicial.shape
 
-output_path = os.path.join('examples', 'heat_simulation_output.png')
-plt.imsave(output_path, U, cmap='hot')
-print(f"Imagem salva em: {output_path}")
+    # Calcular os deltas espaciais
+    dx = Lx / (nx - 1)
+    dy = Ly / (ny - 1)
+
+    # Calcular os sigmas (fatores de difusão)
+    sigma_x = alpha * dt / dx**2
+    sigma_y = alpha * dt / dy**2
+
+    # Verificar condição de estabilidade
+    if sigma_x + sigma_y > 0.5:
+        raise ValueError("Condição de estabilidade violada! Reduza dt ou aumente dx/dy.")
+
+    # Construir as matrizes tridiagonais
+    A_x = construir_matriz_tridiagonal(nx, sigma_x)
+    A_y = construir_matriz_tridiagonal(ny, sigma_y)
+
+    # Inicializar o campo de temperatura
+    U = U_inicial.copy()
+
+    # Número de passos de tempo
+    nT = int(Tf / dt)
+
+    # Iterações no tempo
+    for _ in range(nT):
+        U = resolver_direcao_alternada(U, A_x, axis=0)  # Passo 1: resolver ao longo de x
+        U = resolver_direcao_alternada(U, A_y, axis=1)  # Passo 2: resolver ao longo de y
+
+    return U
