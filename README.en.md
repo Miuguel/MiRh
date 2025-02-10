@@ -45,7 +45,7 @@ MiRh/
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/MiRh.git
+   git clone https://github.com/Miuguel/MiRh
    cd MiRh
    ```
 
