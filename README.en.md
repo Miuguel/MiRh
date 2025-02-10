@@ -75,7 +75,7 @@ MiRh/
 ![Original Image](examples/example_image.png)
 
 ### Result:
-![Result](heat_simulation_output.png)
+![Result](examples/heat_simulation_output.jpg)
 
 ## 🧠 Next Steps
 
