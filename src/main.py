@@ -1,38 +1,51 @@
-from utils import extrair_canais_rgb
-from conv_simulation import conv_simulation
-from adi_simulation import adi_heat_simulation
-from conv_FFT_simulation import conv_simulation_fft
-import numpy as np
-import matplotlib.pyplot as plt
 import os
 import time
+import argparse
+from pathlib import Path
+from simulation.adi_simulation import ADIHeatSimulation
+from image_processing import ImageProcessor
 
-# Caminho dos arquivos
-diretorio_atual = os.path.dirname(os.path.abspath(__file__))
-caminho_imagem = os.path.join(diretorio_atual, '../examples/example_image.png')
-caminho_saida = os.path.join(diretorio_atual, '../examples/heat_simulation_output_FFT_blue.png')
+def parse_args():
+    parser = argparse.ArgumentParser(description='Heat simulation on images using ADI method')
+    parser.add_argument('--input', type=str, required=True,
+                      help='Path to input image')
+    parser.add_argument('--output', type=str, required=True,
+                      help='Path to save output image')
+    parser.add_argument('--dt', type=float, default=0.2,
+                      help='Time step for simulation')
+    parser.add_argument('--iterations', type=int, nargs=3, default=[0, 0, 100],
+                      help='Number of iterations for R,G,B channels')
+    return parser.parse_args()
 
-# Extrair canais R, G, B
-R, G, B = extrair_canais_rgb(caminho_imagem)
-R, G, B = R.astype(float) / 255, G.astype(float) / 255, B.astype(float) / 255
+def main():
+    args = parse_args()
+    
+    # Initialize simulation and image processor
+    simulator = ADIHeatSimulation(dt=args.dt)
+    processor = ImageProcessor()
+    
+    # Load image
+    print(f"Loading image from {args.input}")
+    r, g, b = processor.load_image(args.input)
+    
+    # Process channels
+    print("Running simulation...")
+    start_time = time.time()
+    
+    processed_channels = processor.process_channels(
+        channels=[r, g, b],
+        simulation_func=simulator.simulate,
+        num_iterations=args.iterations
+    )
+    
+    elapsed_time = time.time() - start_time
+    print(f"Simulation completed in {elapsed_time:.4f} seconds")
+    
+    # Combine and save result
+    print(f"Saving result to {args.output}")
+    result = processor.combine_channels(*processed_channels)
+    processor.save_image(result, args.output)
+    print("Done!")
 
-# Parâmetros da simulação (0.25,40) - (10,1)
-dt = 0.2
-num_iterations_r, num_iterations_g, num_iterations_b = 0, 0, 100
-
-# Simulação usando 
-start_time = time.time()
-matriz_r = conv_simulation(R, num_iterations_r, dt)
-matriz_g = conv_simulation(G, num_iterations_g, dt)
-matriz_b = conv_simulation(B, num_iterations_b, dt)
-elapsed_time_fft = time.time() - start_time
-print(f'Elapsed time: {elapsed_time_fft:.4f} seconds')
-
-# Recriar e salvar imagem resultante
-imagem_resultante = np.stack((matriz_r, matriz_g, matriz_b), axis=-1)
-plt.imsave(caminho_saida, imagem_resultante)
-
-# Exibir imagem resultante
-plt.imshow(imagem_resultante)
-plt.title('Simulação de Calor ')
-plt.show()
+if __name__ == '__main__':
+    main()
