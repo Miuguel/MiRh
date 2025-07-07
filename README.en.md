@@ -1,16 +1,19 @@
 # MiRh
 
-**MiRh** is an experimental project that explores the application of numerical methods to simulate differential equations, specifically focusing on heat distribution in a 2D plate. The main idea is to use calculus concepts, such as differential equations and approximation methods, to create interactive visual representations, simulating physical phenomena using colors.
+**MiRh** is an experimental project that explores the application of numerical methods to simulate differential equations, specifically focusing on heat distribution in a 2D plate and image deconvolution. The main idea is to use calculus concepts, such as differential equations and approximation methods, to create interactive visual representations, simulating physical phenomena using colors.
 
 ## 🧮 Objective
 
-The goal of **MiRh** is to learn various numerical and programming concepts while demonstrating the versatility of numerical methods in solving complex problems. The primary application explored so far involves simulating heat propagation in images, represented by color changes.
+The goal of **MiRh** is to learn various numerical and programming concepts while demonstrating the versatility of numerical methods in solving complex problems. The primary application explored so far involves simulating heat propagation in images, represented by color changes, and blind image deconvolution using the Sylvester resultant matrix.
 
 ## 🚀 Features
 
 - Simulations based on numerical methods.
 - Graphical representation of value propagation (such as heat) over a pixel matrix.
+- Image blurring using the ADI (Alternating Direction Implicit) method.
+- Blind Image Deconvolution (BID) based on the Sylvester matrix.
 - Conversion of numerical results into visual transformations, using colors to represent different states.
+- Examples with classic images (e.g., cameraman).
 
 ## 📂 Project Structure
 
@@ -24,8 +27,8 @@ MiRh/
 │   ├── heat_spread_sim_otim.m     # Optimization using matrix operations instead of loops
 │   ├── heat_spread_sim.m          # Heat propagation simulation in a matrix with MATLAB
 │   ├── main.py                    # Main script
-│   ├── metodo_implicito.py        # Implicit methods from Valeria’s book
-│   └── utils.py                    # Auxiliary functions
+│   ├── metodo_implicito.py        # Implicit methods from Valeria's book
+│   └── utils.py                   # Auxiliary functions
 ├── examples/
 │   ├── example_image.jpg          # Sample image for simulation
 │   └── heat_simulation_output.png # Simulation result
@@ -40,21 +43,20 @@ MiRh/
 - **NumPy**: For efficient matrix operations.
 - **Matplotlib**: For plotting and visualizing results.
 - **Pillow (PIL)**: For image processing.
+- **SciPy**: For scientific computing and advanced algorithms.
 
 ## 📦 Installation
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Miuguel/MiRh
+   git clone <repo-url>
    cd MiRh
    ```
-
 2. Create a virtual environment (optional but recommended):
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
-
 3. Install the dependencies:
    ```bash
    pip install -r requirements.txt
@@ -65,9 +67,18 @@ MiRh/
 1. Make sure you have an image in `.jpg` or `.png` format for the simulation.
 2. Run the main script:
    ```bash
-   python src/heat_spread_simulation.py --image examples/example_image.jpg
+   python src/heat_simulation.py --image examples/example_image.jpg
    ```
 3. The output will be saved in the `examples/` folder, showing how "heat" spreads over the image.
+
+## 🔬 Algorithms
+
+- **ADI:** Heat simulation for image blurring using the Alternating Direction Implicit method.
+- **BID:** Blind deconvolution based on the Sylvester matrix.
+
+### Main references:
+- Winkler, The Sylvester resultant matrix and image
+- Other papers cited in the code
 
 ## 🌟 Examples
 
@@ -102,5 +113,4 @@ At this point, my advisor, Ralph, explained to me that what I had just implement
 
 However, the book I was referencing (**EDP - Um curso de Graduação** by Valeria Iório) described the algorithm in one dimension. Extending it to two dimensions would lead to an exponential growth in the matrix size that needed to be solved, even when using sparse matrix techniques.
 
-That’s when I thought of a solution that would break the problem into alternating directional steps. After some research, I discovered the **Alternating Direction Implicit (ADI) method**, which is not only implicit (thus stable) but also takes advantage of sparse matrices to optimize the solution of the Sylvester matrix equation **(AX + XB = C)**.
-```
+That's when I thought of a solution that would break the problem into alternating directional steps. After some research, I discovered the **Alternating Direction Implicit (ADI) method**, which is not only implicit (thus stable) but also takes advantage of sparse matrices to optimize the solution of the Sylvester matrix equation **(AX + XB = C)**.

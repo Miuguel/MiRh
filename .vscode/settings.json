@@ -1,0 +1,8 @@
+{
+    "java.project.sourcePaths": [
+        "torneios"
+    ],
+    "java.project.referencedLibraries": [
+        "torneios\\libs\\json-20240303.jar"
+    ]
+}
