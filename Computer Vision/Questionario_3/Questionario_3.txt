@@ -1,5 +1,0 @@
-Implemente a equalização de histograma e aplique-a sobre as imagens "Questionario-3-Imagem-1.tif" e "Questionario-3-Imagem-2.tif", disponibilizadas junto a este questionário no Google Classroom. Envie como resultado um arquivo ZIP contendo tanto o código fonte do programa produzido quanto as imagens resultantes do processamento, salvas como PNG. Você deve implementar todo o processo, não sendo permitido o uso de funções hist, histeq ou similares disponíveis em bibliotecas de processamento de imagens.
-
-Aplique o filtro da mediana na imagem "Questionario-3-Imagem-3.tif" para reduzir o ruído impulsivo do tipo sal e pimenta. Varie o tamanho do kernel entre 3x3, 5x5 e 7x7 e observe os resultados. Envie um arquivo ZIP contendo tanto o código fonte do programa produzido quanto as imagens resultantes do processamento, salvas como PNG.
-
-Utilize a Transformada Discreta de Fourier para remover o ruído espectral da imagem "Questionario-3-Imagem-4.png". Envie um arquivo ZIP contendo tanto o código fonte do programa produzido quanto a imagem resultante do processamento, salvas como PNG.s
